@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f0faf7;
+  --foreground: #1a2e2a;
+  --primary: #2d6a4f;
+  --primary-light: #52b788;
+  --accent-blue: #1e6091;
+  --accent-blue-light: #48cae4;
+  --surface: #ffffff;
+  --surface-2: #e8f5f0;
+  --border: #b7e4c7;
+  --muted: #6b8f7e;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1f1a;
+    --foreground: #e2f5ec;
+    --surface: #1a2e25;
+    --surface-2: #243d2f;
+    --border: #2d5040;
+    --muted: #7aab8e;
+  }
+}
