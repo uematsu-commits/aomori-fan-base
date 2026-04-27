@@ -170,7 +170,7 @@ export default function PostCard({ post }: { post: Post }) {
               display: "flex",
               alignItems: "center",
               gap: 6,
-              background: "none",
+              background: liked ? "#fff0f3" : "transparent",
               border: "none",
               cursor: "pointer",
               padding: "6px 12px",
@@ -178,7 +178,6 @@ export default function PostCard({ post }: { post: Post }) {
               color: liked ? "#e11d48" : "var(--muted)",
               fontWeight: liked ? 700 : 400,
               fontSize: 14,
-              background: liked ? "#fff0f3" : "transparent",
               transition: "all 0.15s",
             }}
           >
@@ -192,13 +191,12 @@ export default function PostCard({ post }: { post: Post }) {
               display: "flex",
               alignItems: "center",
               gap: 6,
-              background: "none",
+              background: showComments ? "var(--surface-2)" : "transparent",
               border: "none",
               cursor: "pointer",
               padding: "6px 12px",
               borderRadius: 20,
               color: showComments ? "var(--primary)" : "var(--muted)",
-              background: showComments ? "var(--surface-2)" : "transparent",
               fontSize: 14,
               transition: "all 0.15s",
             }}
