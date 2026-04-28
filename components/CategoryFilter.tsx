@@ -1,6 +1,6 @@
 "use client";
 
-import { Category } from "@/lib/mockData";
+import { Category } from "@/lib/types";
 
 const CATEGORIES: { value: Category | "すべて"; emoji: string; label: string }[] = [
   { value: "すべて", emoji: "🗾", label: "すべて" },

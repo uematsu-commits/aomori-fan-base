@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Send, X } from "lucide-react";
-import { Category } from "@/lib/mockData";
+import { Category } from "@/lib/types";
 
 const CATEGORIES: { value: Category; emoji: string }[] = [
   { value: "風景", emoji: "🏔️" },
