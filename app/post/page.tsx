@@ -5,6 +5,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import PostFormServer from "@/components/PostFormServer";
 
+// 許可する画像MIMEタイプ
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+// 最大ファイルサイズ: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// 投稿間隔: 60秒
+const POST_INTERVAL_SECONDS = 60;
+
 export default async function PostPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,21 +22,79 @@ export default async function PostPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/login");
 
-    const content = formData.get("content") as string;
+    const content = (formData.get("content") as string ?? "").trim();
     const category = formData.get("category") as string;
     const imageFile = formData.get("image") as File | null;
 
+    // ── コンテンツバリデーション ──
+    if (!content || content.length > 280) {
+      throw new Error("投稿内容が無効です（1〜280文字）");
+    }
+
+    const validCategories = ["風景", "グルメ", "祭り", "つぶやき"];
+    if (!validCategories.includes(category)) {
+      throw new Error("カテゴリが無効です");
+    }
+
+    // ── レート制限: 60秒に1投稿 ──
+    const { data: recentPost } = await supabase
+      .from("posts")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (recentPost) {
+      const secondsAgo = (Date.now() - new Date(recentPost.created_at).getTime()) / 1000;
+      if (secondsAgo < POST_INTERVAL_SECONDS) {
+        throw new Error(`投稿は${POST_INTERVAL_SECONDS}秒に1回までです`);
+      }
+    }
+
+    // ── 画像バリデーション ──
     let image_url: string | null = null;
 
     if (imageFile && imageFile.size > 0) {
-      const ext = imageFile.name.split(".").pop();
-      const path = `${user.id}/${Date.now()}.${ext}`;
+      // ファイルサイズチェック
+      if (imageFile.size > MAX_FILE_SIZE) {
+        throw new Error("画像ファイルは5MB以下にしてください");
+      }
+
+      // MIMEタイプチェック（サーバー側）
+      if (!ALLOWED_MIME_TYPES.includes(imageFile.type)) {
+        throw new Error("JPEG・PNG・GIF・WebP形式の画像のみアップロードできます");
+      }
+
+      // ファイルの先頭バイトでマジックナンバーを確認（より厳格な検証）
+      const buffer = await imageFile.arrayBuffer();
+      const bytes = new Uint8Array(buffer.slice(0, 4));
+      const isValidImage =
+        (bytes[0] === 0xff && bytes[1] === 0xd8) || // JPEG
+        (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) || // PNG
+        (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) || // GIF
+        (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46); // WebP (RIFF)
+
+      if (!isValidImage) {
+        throw new Error("無効な画像ファイルです");
+      }
+
+      // 安全なファイルパスを生成（拡張子はMIMEタイプから決定）
+      const mimeToExt: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/gif": "gif",
+        "image/webp": "webp",
+      };
+      const safeExt = mimeToExt[imageFile.type];
+      const safePath = `${user.id}/${Date.now()}.${safeExt}`;
+
       const { error: uploadError } = await supabase.storage
         .from("post-images")
-        .upload(path, imageFile);
+        .upload(safePath, imageFile, { contentType: imageFile.type });
 
       if (!uploadError) {
-        const { data } = supabase.storage.from("post-images").getPublicUrl(path);
+        const { data } = supabase.storage.from("post-images").getPublicUrl(safePath);
         image_url = data.publicUrl;
       }
     }

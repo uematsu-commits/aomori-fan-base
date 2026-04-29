@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, MessageCircle, MapPin, Send } from "lucide-react";
+import { Heart, MessageCircle, MapPin, Send, Flag } from "lucide-react";
 import { Post } from "@/lib/types";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -41,6 +41,7 @@ export default function PostCard({ post, currentUser, initialLiked }: Props) {
   const [comments, setComments] = useState(post.comments ?? []);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [reportState, setReportState] = useState<"idle" | "confirm" | "done">("idle");
 
   const handleLike = async () => {
     if (!currentUser) {
@@ -56,6 +57,19 @@ export default function PostCard({ post, currentUser, initialLiked }: Props) {
     } else {
       await supabase.from("likes").insert({ post_id: post.id, user_id: currentUser.id });
     }
+  };
+
+  const handleReport = async () => {
+    if (!currentUser) {
+      router.push("/login");
+      return;
+    }
+    await supabase.from("reports").insert({
+      post_id: post.id,
+      user_id: currentUser.id,
+      reason: "不適切なコンテンツ",
+    });
+    setReportState("done");
   };
 
   const handleComment = async () => {
@@ -161,6 +175,44 @@ export default function PostCard({ post, currentUser, initialLiked }: Props) {
             <MessageCircle size={16} />
             <span>コメント {comments.length}</span>
           </button>
+
+          {/* 通報ボタン */}
+          <div style={{ marginLeft: "auto" }}>
+            {reportState === "done" ? (
+              <span style={{ fontSize: 12, color: "var(--muted)", padding: "6px 12px" }}>
+                ✅ 通報しました
+              </span>
+            ) : reportState === "confirm" ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>通報しますか？</span>
+                <button
+                  onClick={handleReport}
+                  style={{ fontSize: 12, color: "#e11d48", background: "#fff0f3", border: "none", borderRadius: 12, padding: "4px 10px", cursor: "pointer", fontWeight: 700 }}
+                >
+                  はい
+                </button>
+                <button
+                  onClick={() => setReportState("idle")}
+                  style={{ fontSize: 12, color: "var(--muted)", background: "transparent", border: "none", cursor: "pointer" }}
+                >
+                  キャンセル
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setReportState("confirm")}
+                title="この投稿を通報する"
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, border: "none", cursor: "pointer",
+                  padding: "6px 10px", borderRadius: 20, fontSize: 12, background: "transparent",
+                  color: "var(--muted)", transition: "all 0.15s",
+                }}
+              >
+                <Flag size={13} />
+                通報
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Comments */}

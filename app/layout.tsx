@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Aomori Fan Base | あおもりファンベース",
@@ -22,15 +23,26 @@ export default function RootLayout({
         <footer
           style={{
             marginTop: 48,
-            padding: "24px 16px",
-            textAlign: "center",
+            padding: "28px 16px",
             borderTop: "1px solid var(--border)",
             color: "var(--muted)",
             fontSize: 13,
           }}
         >
-          <p>🍎 Aomori Fan Base — 青森をもっと好きになる場所</p>
-          <p style={{ marginTop: 4, fontSize: 12 }}>© 2026 Aomori Fan Base. All rights reserved.</p>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+            <p style={{ marginBottom: 10 }}>🍎 Aomori Fan Base — 青森をもっと好きになる場所</p>
+            <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 12, flexWrap: "wrap" }}>
+              <Link href="/terms" style={{ color: "var(--muted)", textDecoration: "none", fontSize: 12 }}>
+                利用規約
+              </Link>
+              <Link href="/privacy" style={{ color: "var(--muted)", textDecoration: "none", fontSize: 12 }}>
+                プライバシーポリシー
+              </Link>
+            </div>
+            <p style={{ fontSize: 11, lineHeight: 1.6 }}>
+              © 2026 Aomori Fan Base. 投稿コンテンツの著作権は各投稿者に帰属します。
+            </p>
+          </div>
         </footer>
       </body>
     </html>
